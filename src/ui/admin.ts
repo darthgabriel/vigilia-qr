@@ -1,6 +1,6 @@
 import { api } from "../api";
 import { icons } from "../icons";
-import { esc, setLoading, toast } from "./dom";
+import { esc, setLoading, showModal, toast } from "./dom";
 import type { Ctx } from "./ctx";
 
 let verified = false;
@@ -52,31 +52,6 @@ function renderPinForm(view: HTMLElement, ctx: Ctx): void {
   });
 }
 
-function groupsPreview(ctx: Ctx): string {
-  const { topics, participants } = ctx.state;
-
-  if (topics.length === 0) {
-    return `<p class="hint">No hay motivos de oración.</p>`;
-  }
-  if (participants.length === 0) {
-    return `<p class="hint">Aún no hay personas registradas.</p>`;
-  }
-
-  return topics
-    .map((t, i) => {
-      const members = participants.filter((p) => p.topicId === t.id);
-      return `
-      <div class="member" style="align-items:flex-start; flex-direction:column; gap:4px">
-        <div class="group-head" style="width:100%; margin:0">
-          <strong>${i + 1}. ${esc(t.title)}</strong>
-          <span class="badge">${members.length}</span>
-        </div>
-        <span class="hint" style="margin:0">${members.length === 0 ? "Sin integrantes" : members.map((m) => esc(m.name)).join(" · ")}</span>
-      </div>`;
-    })
-    .join("");
-}
-
 function renderDashboard(view: HTMLElement, ctx: Ctx): void {
   const { topics, participants } = ctx.state;
   const p = pin();
@@ -98,6 +73,15 @@ function renderDashboard(view: HTMLElement, ctx: Ctx): void {
     <h1>Panel</h1>
 
     <div class="card">
+      <h2>Personas</h2>
+      <p class="hint">${participants.length} registradas · se asignan al grupo más pequeño</p>
+      <form id="person-form" class="row" style="margin-top:12px">
+        <input id="person-input" placeholder="Nombre de la persona" aria-label="Nombre de la persona" maxlength="60" style="flex:1" />
+        <button class="btn btn-primary btn-sm" type="submit" aria-label="Agregar persona" style="width:48px;padding:0">${icons.plus}</button>
+      </form>
+    </div>
+
+    <div class="card">
       <h2>Motivos de oración</h2>
       <p class="hint">${topics.length} activos · ${participants.length} personas registradas</p>
       <ul class="topic-list" id="topic-list">${rows}</ul>
@@ -106,11 +90,6 @@ function renderDashboard(view: HTMLElement, ctx: Ctx): void {
         <button class="btn btn-primary btn-sm" type="submit" aria-label="Agregar motivo" style="width:48px;padding:0">${icons.plus}</button>
       </form>
       <p class="error" id="admin-error" hidden></p>
-    </div>
-
-    <div class="card">
-      <h2>Grupos actuales</h2>
-      <div id="groups-preview">${groupsPreview(ctx)}</div>
     </div>
 
     <div class="card danger-zone">
@@ -194,6 +173,32 @@ function renderDashboard(view: HTMLElement, ctx: Ctx): void {
       await ctx.refresh();
     } catch (err) {
       fail((err as Error).message === "unauthorized" ? "PIN inválido." : "No se pudo agregar.");
+    }
+  });
+
+  const personForm = view.querySelector<HTMLFormElement>("#person-form")!;
+  const personInput = view.querySelector<HTMLInputElement>("#person-input")!;
+  personForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = personInput.value.trim();
+    if (!name) return;
+    try {
+      const res = await api.register(name);
+      personInput.value = "";
+      if (res.existing) {
+        toast("Ese nombre ya existe");
+      } else {
+        const me = res.participants.find((x) => x.name.toLowerCase() === name.toLowerCase());
+        const topicIdx = res.topics.findIndex((t) => t.id === me?.topicId);
+        if (me && topicIdx >= 0) {
+          showModal({ name: me.name, groupNumber: topicIdx + 1, topic: res.topics[topicIdx].title });
+        } else {
+          toast("Persona agregada");
+        }
+      }
+      await ctx.refresh();
+    } catch (err) {
+      fail((err as Error).message === "name_too_long" ? "Nombre demasiado largo." : "No se pudo agregar.");
     }
   });
 

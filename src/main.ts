@@ -40,7 +40,7 @@ function header(): string {
   const themeLabel = currentTheme() === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
   return `
     <header class="topbar">
-      <span class="brand"><img src="/logo.png" alt="" /> Formador de Grupos - RD</span>
+      <a class="brand" href="#/" style="text-decoration:none;color:inherit"><img src="/logo.png" alt="" /> Formador de Grupos - RD</a>
       <button class="iconbtn" id="theme-btn" aria-label="${themeLabel}">${themeIcon}</button>
       <a class="iconbtn" href="#/admin" aria-label="Panel de administración">${icons.lock}</a>
     </header>`;
