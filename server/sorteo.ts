@@ -1,6 +1,6 @@
-import { db } from "./db";
-import { pickSmallest } from "../shared/balance";
-import type { Participant, Sorteo, Topic } from "../shared/types";
+import { db } from "./db.js";
+import { pickSmallest } from "../shared/balance.js";
+import type { Participant, Sorteo, Topic } from "../shared/types.js";
 
 export interface State {
   sorteo: Sorteo | null;

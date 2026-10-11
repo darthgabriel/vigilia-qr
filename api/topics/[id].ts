@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { hasPin } from "../../server/auth";
-import { json, methodNotAllowed, readJson } from "../../server/http";
-import { db } from "../../server/db";
+import { hasPin } from "../../server/auth.js";
+import { json, methodNotAllowed, readJson } from "../../server/http.js";
+import { db } from "../../server/db.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   try {

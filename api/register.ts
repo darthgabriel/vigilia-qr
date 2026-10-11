@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { json, methodNotAllowed, readJson } from "../server/http";
-import { register } from "../server/sorteo";
+import { json, methodNotAllowed, readJson } from "../server/http.js";
+import { register } from "../server/sorteo.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   try {
